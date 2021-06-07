@@ -4,12 +4,15 @@ create or replace package aktuar_2020 is
   -- Created : 11.08.2020 15:00:47
   -- Purpose : Проведение актуарных расчетов
   
+  --0705
   procedure proc_childcare(iid_calc pls_integer, idate date);
+  --0703
   procedure proc_unemployment(iid_calc pls_integer, idate date);
-  
+
+  --0702  
   procedure proc_disability_with_mortality(iid_calc pls_integer, idate date);
   procedure proc_disability_without_mortality(iid_calc pls_integer, idate date);
-  
+  --0701
   procedure proc_BW_1(iid_calc pls_integer, idate date); 
   procedure proc_BW_2(iid_calc pls_integer, idate date);
   procedure proc_BW_3(iid_calc pls_integer, idate date);
@@ -48,6 +51,14 @@ create or replace package body aktuar_2020 is
   table_aktuar_dependant aktuar_dependant_table;
   l_index pls_integer default 0;
 
+ procedure log(imess in varchar2)
+ is
+    PRAGMA AUTONOMOUS_TRANSACTION;
+ begin
+   insert into log(date_op, msg) values(SYSTIMESTAMP, imess);
+   commit;
+ end;
+
   procedure set_print(ion_print in char)
   is
   begin
@@ -70,6 +81,28 @@ create or replace package body aktuar_2020 is
       commit;
       end;
   end print_line;
+
+  function fprint_line(iid_calc pls_integer, iCalc_type char, iPNPT_ID pls_integer, iIRFPM_ID varchar, iSUMM_ALL NUMBER, idate_stop date)
+           return pls_integer
+  is
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  begin
+    if on_print='Y' then
+      INSERT INTO model_calculates( id_calc, calc_type, PNPT_ID, RFPM_ID, SUMM_ALL, date_stop) 
+             VALUES(iid_calc, iCalc_type, iPNPT_ID, iIRFPM_ID, iSUMM_ALL, idate_stop);
+      commit;
+      return 0;
+    end if;
+    
+    exception when dup_val_on_index then 
+      begin
+        INSERT INTO model_calculates_err( id_calc, calc_type, PNPT_ID, RFPM_ID, SUMM_ALL, date_stop) 
+               VALUES(iid_calc, iCalc_type, iPNPT_ID, iIRFPM_ID, iSUMM_ALL, idate_stop);
+      commit;
+      return 1;
+      end;
+  end fprint_line;
+
 
   function get_days(idate1 date, idate2 date) return pls_integer
   is
@@ -141,6 +174,8 @@ create or replace package body aktuar_2020 is
     return_date:=trunc(add_months(birthdate, add_yer*12+add_mon),'MM')+v_day-1;
 --    return_date:=add_months(birthdate, add_yer*12+6);
     return return_date;
+    exception when others then 
+        log( '0702: get_pension_date, birthdate: '||birthdate||', return_date: '||return_date||', error: '||sqlerrm);    
   end get_pension_date;
 
   function get_23_date (birthdate in date, age_23 in number) return date
@@ -379,7 +414,7 @@ create or replace package body aktuar_2020 is
   begin
     all_summ:=0;
     cnt:=0;
-    sswh.util.log_reports('aktuar_2020', 'get_result_BW_1', 'Начало работы');
+    log('0701: Начало работы: '||v_rfpm);
     dbms_application_info.set_module('aktuar_2020','get_result_BW_1');
     for cur in ( select unique ad.pnpt_id, ad.stopdate date_stop 
                  from sswh.aktuar_dependant ad 
@@ -399,10 +434,11 @@ create or replace package body aktuar_2020 is
 
         print_line(iid_calc, '1',cur.pnpt_id, v_rfpm, curr_summ, cur.date_stop);
       exception when others then
-          sswh.util.log_reports('aktuar_2020', 'get_result_BW_1', 'Ощибка. pnpt_id: '||cur.pnpt_id);
+          log('Aktuar_2020, get_result_BW_1, Ощибка. pnpt_id: '||cur.pnpt_id);
           raise_application_error(-20000, 'get_result_BW_1, pnpt_id: '||cur.pnpt_id||' : '||sqlerrm);
       end;
     end loop;
+    log('0701: Завершен расчет по: '||v_rfpm||', Дел: '||cnt_all||', Сумма: '||all_summ);
   end get_result_BW_1;
 
 
@@ -415,7 +451,7 @@ create or replace package body aktuar_2020 is
   begin
     all_summ:=0;
     cnt:=0;
-    sswh.util.log_reports('aktuar_2020', 'get_result_BW_2', 'Начало работы');
+    log('0701: Начало работы: '||v_rfpm);
     dbms_application_info.set_module('aktuar_2020','get_result_BW_2');
     for cur in ( select unique ad.pnpt_id, max(ad.stopdate) date_stop 
                  from sswh.aktuar_dependant ad 
@@ -436,10 +472,11 @@ create or replace package body aktuar_2020 is
 
         print_line(iid_calc, '2', cur.pnpt_id, '07010102', curr_summ, cur.date_stop);
       exception when others then
-          sswh.util.log_reports('aktuar_2020', 'get_result_BW_2', 'Ощибка. pnpt_id: '||cur.pnpt_id);
+          log('Aktuar_2020, get_result_BW_2, Ощибка. pnpt_id: '||cur.pnpt_id);
           raise_application_error(-20000, 'get_result_BW_2, pnpt_id: '||cur.pnpt_id||' : '||sqlerrm);
       end;
     end loop;
+    log('0701: Завершен расчет по: '||v_rfpm||', Дел: '||cnt_all||', Сумма: '||all_summ);
   end get_result_BW_2;
 
 
@@ -452,7 +489,7 @@ create or replace package body aktuar_2020 is
   begin
     all_summ:=0;
     cnt:=0;
-    sswh.util.log_reports('aktuar_2020', 'get_result_BW_3', 'Начало работы');
+    log('0701: Начало работы: '||v_rfpm);
     dbms_application_info.set_module('aktuar_2020','get_result_BW_3');
     for cur in ( select unique ad.pnpt_id, max(ad.stopdate) date_stop 
                  from sswh.aktuar_dependant ad 
@@ -473,11 +510,11 @@ create or replace package body aktuar_2020 is
 
         print_line(iid_calc, '3', cur.pnpt_id, '07010103', curr_summ, cur.date_stop);
       exception when others then
-          sswh.util.log_reports('aktuar_2020', 'get_result_BW_3', 'Ощибка. pnpt_id: '||cur.pnpt_id);
+          log('aktuar_2020, get_result_BW_3, Ошибка. pnpt_id: '||cur.pnpt_id);
           raise_application_error(-20000, 'get_result__BW_3, pnpt_id: '||cur.pnpt_id||' : '||sqlerrm);
       end;
     end loop;
-    sswh.util.log_reports('aktuar_2020', 'get_result_BW_3', 'rfpm_id: 07010103, '||', Дел: '||cnt_all||', Сумма: '||all_summ);
+    log('0701: Завершен расчет по: '||v_rfpm||', Дел: '||cnt_all||', Сумма: '||all_summ);
   end get_result_BW_3;
 
   procedure get_result_BW_4(iid_calc pls_integer)
@@ -489,7 +526,7 @@ create or replace package body aktuar_2020 is
   begin
     all_summ:=0;
     cnt:=0;
-    sswh.util.log_reports('aktuar_2020', 'get_result_BW_4', 'Начало работы');
+    log('0701: Начало работы: '||v_rfpm);
     dbms_application_info.set_module('aktuar_2020','get_result_BW_4');
     for cur in ( select unique ad.pnpt_id, max(ad.stopdate) date_stop 
                  from sswh.aktuar_dependant ad 
@@ -510,66 +547,13 @@ create or replace package body aktuar_2020 is
 
         print_line(iid_calc, '4', cur.pnpt_id, '07010104', curr_summ, cur.date_stop);
       exception when others then
-          sswh.util.log_reports('aktuar_2020', 'get_result_BW_4', 'Ощибка. pnpt_id: '||cur.pnpt_id);
+          log('Aktuar_2020, get_result_BW_4, Ощибка. pnpt_id: '||cur.pnpt_id);
           raise_application_error(-20000, 'get_result_BW_4, pnpt_id: '||cur.pnpt_id||' : '||sqlerrm);
       end;
     end loop;
-    sswh.util.log_reports('aktuar_2020', 'get_result_BW_4', 'rfpm_id: 07010104, '||', Дел: '||cnt_all||', Сумма: '||all_summ);
+    log('0701: Завершен расчет по: '||v_rfpm||', Дел: '||cnt_all||', Сумма: '||all_summ);
   end get_result_BW_4;
 
-  --утрата трудоспособности без таблицы смертности
-  procedure disability_without_mortality(iid_calc pls_integer)
-  is
-    stop_age    date;
---    pension_age number(3,1);
-    age_valuation number(4,2);
-    years_before_pension number(4,2);
-    error       pls_integer default 0;
-    curr_summ number(19,2);
-    all_summ number(19,2);
-  begin
-    /*ЕСЛИ(ИЛИ(G8<F8;G8<Summary!$B$30);
-              "ERROR";
-      12*H8*: sum_pay
-      (M8-Summary!$B$30)/365,25)
-    */
-    all_summ:=0;
-    for cur in( select *
-                from sswh.aktuar_dependant ad
-                where ad.mnth=v_date_calculate
-                and   substr(ad.rfpm_id,1,4)='0702'
-               )
-    loop
-      age_valuation:=round(get_days(v_date_calculate,cur.birthdate)/365.25);
---      pension_age:=get_pension_age(cur.birthdate, cur.sex);
---      stop_age:=cur.birthdate+365.25*pension_age;
-      stop_age:=get_pension_date(cur.birthdate,cur.sex);
-      years_before_pension:=get_days(stop_age,v_date_calculate)/365.25;
-
-      error:=case when stop_age<cur.appointdate or stop_age<v_date_calculate
-                  then 1
-                  else 0
-             end;
-      if error=0
-      then
-        curr_summ:=12*cur.sum_pay*years_before_pension;
-      else
-        curr_summ:=0;
-      end if;
-      all_summ:=all_summ+curr_summ;
-      print_line(iid_calc, 'W', cur.pnpt_id, cur.RFPM_ID, curr_summ, cur.stopdate);
-    end loop;
---    return all_summ;
-  end disability_without_mortality;
-
-  procedure proc_disability_without_mortality(iid_calc pls_integer, idate date)
-  is
-  begin
-    on_print:='Y';
-    v_rfpm:='0702';
-    v_date_calculate:=idate;
-    disability_without_mortality(iid_calc);
-  end;
 
   function get_expect_duration_live(age_valuation in number, years_before_pension in number, sex in char) return number
   is
@@ -702,7 +686,6 @@ create or replace package body aktuar_2020 is
 
 --    error:=case when stop_age<cur.appointdate or stop_age<v_date_calculate
     error:=case when stop_date<cur.appointdate or stop_date<v_date_calculate
-
                 then 1
                 else 0
            end;
@@ -716,26 +699,81 @@ create or replace package body aktuar_2020 is
     else
       curr_summ:=0;
     end if;
---/*
-    raise_application_error(-20000,
-                                    'pnpt_id: '||cur.pnpt_id||chr(10)||
-                                    'sex: '||cur.sex||chr(10)||
-                                    'birthdate: '||cur.birthdate||chr(10)||
-                                    'age_valuation: '||age_valuation||chr(10)||
+/*
+    log('pnpt_id: '||cur.pnpt_id||chr(10)||
+        'sex: '||cur.sex||chr(10)||
+        'birthdate: '||cur.birthdate||chr(10)||
+        'age_valuation: '||age_valuation||chr(10)||
 --                                    'pension_age: '||pension_age||chr(10)||
-                                    'DB stopdate: '||cur.stopdate||chr(10)||
-                                    'stop_date: '||stop_date||chr(10)||
-                                    'v_date_calculate: '||v_date_calculate||chr(10)||
-                                    'years_before_pension: '||years_before_pension||chr(10)||
-                                    'sum_pay: '||cur.sum_pay||chr(10)||
-                                    'expect_duration_live: '||expect_duration_live||chr(10)||
-                                    'years_before_pension: '||years_before_pension||chr(10)||
-                                    'окр_вверх_years_before_pension: '||ceil(years_before_pension)||chr(10)||
-                                    'RESULT: '||curr_summ
+        'DB stopdate: '||cur.stopdate||chr(10)||
+        'stop_date: '||stop_date||chr(10)||
+        'v_date_calculate: '||v_date_calculate||chr(10)||
+        'years_before_pension: '||years_before_pension||chr(10)||
+        'sum_pay: '||cur.sum_pay||chr(10)||
+        'expect_duration_live: '||expect_duration_live||chr(10)||
+        'years_before_pension: '||years_before_pension||chr(10)||
+        'окр_вверх_years_before_pension: '||ceil(years_before_pension)||chr(10)||
+        'RESULT: '||curr_summ
                                     );
 --*/
     return curr_summ;
   end disability_with_mortality_personality;
+
+  --утрата трудоспособности без таблицы смертности
+  procedure disability_without_mortality(iid_calc pls_integer)
+  is
+    stop_age    date;
+--    pension_age number(3,1);
+    age_valuation number(4,2);
+    years_before_pension number(4,2);
+    error       pls_integer default 0;
+    curr_summ number(19,2);
+    all_summ number(19,2);
+  begin
+    /*ЕСЛИ(ИЛИ(G8<F8;G8<Summary!$B$30);
+              "ERROR";
+      12*H8*: sum_pay
+      (M8-Summary!$B$30)/365,25)
+    */
+    all_summ:=0;
+
+    delete from model_calculates mc where mc.id_calc = iid_calc and mc.calc_type = 'W';
+    log('0702: Type=W. Для ID_CALC: '||iid_calc||', удалено записей: '||sql%rowcount);
+    commit;
+    
+    for cur in( select *
+                from sswh.aktuar_dependant ad
+                where ad.mnth=v_date_calculate
+                and   substr(ad.rfpm_id,1,4)='0702'
+               )
+    loop
+      begin
+        age_valuation:=round(get_days(v_date_calculate,cur.birthdate)/365.25);
+  --      pension_age:=get_pension_age(cur.birthdate, cur.sex);
+  --      stop_age:=cur.birthdate+365.25*pension_age;
+        stop_age:=get_pension_date(cur.birthdate,cur.sex);
+        years_before_pension:=get_days(stop_age,v_date_calculate)/365.25;
+
+        error:=case when stop_age<cur.appointdate or stop_age<v_date_calculate
+                    then 1
+                    else 0
+               end;
+        if error=0
+        then
+          curr_summ:=12*cur.sum_pay*years_before_pension;
+        else
+          curr_summ:=0;
+        end if;
+        all_summ:=all_summ+curr_summ;
+        print_line(iid_calc, 'W', cur.pnpt_id, cur.RFPM_ID, curr_summ, cur.stopdate);
+      exception when others then 
+        log( '0702: Type=W, Ошибка pnpt_id: '||cur.pnpt_id||', age_valuation: '||age_valuation||
+             ', stop_age: '||stop_age||',  years_before_pension:'|| years_before_pension||
+             ', error: '||error||', all_sum: '||all_summ||', error: '||sqlerrm);
+      end;
+    end loop;
+--    return all_summ;
+  end disability_without_mortality;
 
   procedure disability_with_mortality(iid_calc pls_integer)
   is
@@ -761,65 +799,63 @@ create or replace package body aktuar_2020 is
     */
     all_summ:=0;
     expect_duration_live:=0;
+    
+    delete from model_calculates mc where mc.id_calc = iid_calc and mc.calc_type = 'M';
+    log('0702: Type=M. Для ID_CALC: '||iid_calc||', удалено записей: '||sql%rowcount);
+    commit;
+    
     for cur in( select *
                 from sswh.aktuar_dependant ad
                 where ad.mnth=v_date_calculate
                 and   substr(ad.rfpm_id,1,4)='0702'
---                and   ad.pnpt_id=118851951
---                and   ad.pnpt_id=117431361
                )
     loop
-      age_valuation:=round(get_days(v_date_calculate,cur.birthdate)/365.25);
---      pension_age:=get_pension_age(cur.birthdate, cur.sex);
---      stop_age:=cur.birthdate+365.25*pension_age;
---      stop_date:=get_pension_date(cur.birthdate,cur.birthdate+365.25*pension_age);
-      stop_date:=get_pension_date(cur.birthdate,cur.sex);
-      years_before_pension:=get_days(stop_date,v_date_calculate)/365.25;
+      begin
+        age_valuation:=round(get_days(v_date_calculate,cur.birthdate)/365.25);
+  --      pension_age:=get_pension_age(cur.birthdate, cur.sex);
+  --      stop_age:=cur.birthdate+365.25*pension_age;
+  --      stop_date:=get_pension_date(cur.birthdate,cur.birthdate+365.25*pension_age);
+        stop_date:=get_pension_date(cur.birthdate,cur.sex);
+        years_before_pension:=get_days(stop_date,v_date_calculate)/365.25;
 
-      error:=case when stop_date<cur.appointdate or stop_date<v_date_calculate
-                  then 1
-                  else 0
-             end;
-      if error=0 then
-        expect_duration_live:=get_expect_duration_live(age_valuation, ceil(years_before_pension), cur.sex);
-        if expect_duration_live=0 then
-          curr_summ:=0;
+        error:=case when stop_date<cur.appointdate or stop_date<v_date_calculate
+                    then 1
+                    else 0
+               end;
+        if error=0 then
+          expect_duration_live:=get_expect_duration_live(age_valuation, ceil(years_before_pension), cur.sex);
+          if expect_duration_live=0 then
+            curr_summ:=0;
+          else
+             curr_summ:=12*cur.sum_pay*years_before_pension*expect_duration_live/ceil(years_before_pension);
+          end if;
         else
-           curr_summ:=12*cur.sum_pay*years_before_pension*expect_duration_live/ceil(years_before_pension);
+          curr_summ:=0;
         end if;
-      else
-        curr_summ:=0;
-      end if;
-      all_summ:=all_summ+curr_summ;
-/*
-            raise_application_error(-20000,
-                                            'pnpt_id: '||cur.pnpt_id||chr(10)||
-                                            'sex: '||cur.sex||chr(10)||
-                                            'age_valuation: '||age_valuation||chr(10)||
-                                            'birthdate: '||cur.birthdate||chr(10)||
-                                            'stopdate: '||cur.stopdate||chr(10)||
-                                            'stop_date: '||stop_date||chr(10)||
-                                            'years_before_pension: '||years_before_pension||chr(10)||
-                                            'curr_summ: '||curr_summ||chr(10)||
-                                            'sum_pay: '||cur.sum_pay||chr(10)||
-                                            'expect_duration_live: '||expect_duration_live||chr(10)||
-                                            'years_before_pension: '||years_before_pension||chr(10)||
-                                            'years_before_pension: '||ceil(years_before_pension)||chr(10));
---*/
-      print_line(iid_calc, 'M', cur.pnpt_id, cur.RFPM_ID, curr_summ, stop_date);
+        all_summ:=all_summ+curr_summ;
+  /*
+        log('pnpt_id: '||cur.pnpt_id||chr(10)||
+            'sex: '||cur.sex||chr(10)||
+            'age_valuation: '||age_valuation||chr(10)||
+            'birthdate: '||cur.birthdate||chr(10)||
+            'stopdate: '||cur.stopdate||chr(10)||
+            'stop_date: '||stop_date||chr(10)||
+            'years_before_pension: '||years_before_pension||chr(10)||
+            'curr_summ: '||curr_summ||chr(10)||
+            'sum_pay: '||cur.sum_pay||chr(10)||
+            'expect_duration_live: '||expect_duration_live||chr(10)||
+            'years_before_pension: '||years_before_pension||chr(10)||
+            'years_before_pension: '||ceil(years_before_pension)||chr(10));
+  --*/
+        print_line(iid_calc, 'M', cur.pnpt_id, cur.RFPM_ID, curr_summ, stop_date);
+      exception when others then
+        log( '0702: Type=M, Ошибка pnpt_id: '||cur.pnpt_id||', age_valuation: '||age_valuation||
+             ', stop_date: '||stop_date||', years_before_pension:'|| years_before_pension||
+             ', error: '||error||', all_sum: '||all_summ||', error: '||sqlerrm);
+      end;
     end loop;
   end disability_with_mortality;
-
-  procedure proc_disability_with_mortality(iid_calc pls_integer, idate date)
-  is
-  begin
-    on_print:='Y';
-    v_rfpm:='0702';
-    v_date_calculate:=trunc(idate,'MM');
-    disability_with_mortality(iid_calc);
-  end proc_disability_with_mortality;
-
-
+  
   procedure childcare(iid_calc pls_integer)
   is
     curr_summ number(19,2);
@@ -833,7 +869,8 @@ create or replace package body aktuar_2020 is
   H8: sum_pay
 */
     all_summ:=0;
-    for cur in( select *
+    log('ChildCare стартовал');
+    for cur in( select ad.*, rowid
                 from sswh.aktuar_dependant ad
                 where ad.mnth=v_date_calculate
                 and   substr(ad.rfpm_id,1,4)='0705'
@@ -850,6 +887,7 @@ create or replace package body aktuar_2020 is
       all_summ:=all_summ+curr_summ;
       print_line(iid_calc, '0', cur.pnpt_id, cur.RFPM_ID, curr_summ, cur.stopdate);
     end loop;
+    log('ChildCare завершил работу успешно. Общая сумма: '||all_summ);
   end childcare;
 
   procedure proc_childcare(iid_calc pls_integer, idate date)
@@ -907,6 +945,24 @@ create or replace package body aktuar_2020 is
     unemployment(iid_calc);
   end proc_unemployment;
 
+  procedure proc_disability_without_mortality(iid_calc pls_integer, idate date)
+  is
+  begin
+    on_print:='Y';
+    v_rfpm:='0702';
+    v_date_calculate:=idate;
+    disability_without_mortality(iid_calc);
+  end;
+
+  procedure proc_disability_with_mortality(iid_calc pls_integer, idate date)
+  is
+  begin
+    on_print:='Y';
+    v_rfpm:='0702';
+    v_date_calculate:=trunc(idate,'MM');
+    disability_with_mortality(iid_calc);
+  end proc_disability_with_mortality;
+
   procedure proc_BW_1(iid_calc pls_integer, idate date)
   is
   begin
@@ -944,6 +1000,7 @@ create or replace package body aktuar_2020 is
   end proc_BW_4;
 
 begin
+  execute immediate 'alter session set NLS_DATE_FORMAT = "dd.mm.yyyy"';
   v_date_calculate:=trunc(sysdate,'MM');
   is_pnpt:='Y';
   on_print:='N';
