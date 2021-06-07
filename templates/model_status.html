@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ res_value('CALCULATINGS') }}
+{% endblock %}
+
+{% block main_title %}
+<!--    <H1 class="title">Список проведенных расчетов  для модели: {{ id_model }}</H1>-->
+    <H1 class="title">{{ res_value('LIST_MODEL') }}: {{ id_model }}</H1>
+{% endblock %}
+
+{% block body %}
+<!--<div class="form_status_div">-->
+     <table class="table_model_status">
+         <colgroup>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+         </colgroup>
+         <thead>
+             <tr>
+                 <th><a>{{ res_value('ID_CALC') }}</a></th>
+                 <th><a>{{ res_value('MONTH_CALC') }}</a></th>
+                 <th><a>{{ res_value('STATUS_CALC') }} 0701</a></th>
+                 <th><a>{{ res_value('STATUS_CALC') }} 0702</a></th>
+                 <th><a>{{ res_value('STATUS_CALC') }} 0703</a></th>
+                 <th><a>{{ res_value('STATUS_CALC') }} 0705</a></th>
+                 <th><a name="sum_column">{{ res_value('SUMMARY_REPORT') }}</a></th>
+                <th><a class="new_calc_ref" href="/model-calc/{{ id_model }}/new"><br>{{ res_value('NEW_CALC') }}</a><br><br></th>
+             </tr>
+         </thead>
+         <tfoot></tfoot>
+         <tbody>
+            {% for el in cursor %}
+              <tr>
+                <td>{{ el.id_calc }}</td>
+                <td>{{ el.date_calc.date() }}</td>
+
+                {% if el.st_0701 != 'R'  %}
+                    {% if el.st_0701 == 'Z'  %}
+                        <td><a class="report_empty">{{ res_value('REPORT_ABSENT') }}</a></td>
+                    {% else %}
+                        <td><a class="report_empty">{{ res_value('REPORT_PREPARING') }}</a></td>
+                    {% endif %}
+                {% else %}
+                  <td><a class="get_report" href="/model-status/{{ el.id_model }}/{{ el.id_calc }}/report_0701">{{ res_value('REPORT_GET') }}</a></td>
+                {% endif %}
+
+                {% if el.st_0702 != 'R'  %}
+                    {% if el.st_0702 == 'Z'  %}
+                        <td><a class="report_empty">{{ res_value('REPORT_ABSENT') }}</a></td>
+                    {% else %}
+                        <td><a class="report_empty">{{ res_value('REPORT_PREPARING') }}</a></td>
+                    {% endif %}
+                {% else %}
+                  <td><a class="get_report" href="/model-status/{{ el.id_model }}/{{ el.id_calc }}/report_0702">{{ res_value('REPORT_GET') }}</a></td>
+                {% endif %}
+
+                {% if el.st_0703 != 'R'  %}
+                    {% if el.st_0703 == 'Z'  %}
+                        <td><a class="report_empty">{{ res_value('REPORT_ABSENT') }}</a></td>
+                    {% else %}
+                        <td><a class="report_empty">{{ res_value('REPORT_PREPARING') }}</a></td>
+                    {% endif %}
+                {% else %}
+                  <td><a class="get_report" href="/model-status/{{ el.id_model }}/{{ el.id_calc }}/report_0703">{{ res_value('REPORT_GET') }}</a></td>
+                {% endif %}
+
+                {% if el.st_0705 != 'R'  %}
+                    {% if el.st_0705 == 'Z'  %}
+                        <td><a class="report_empty">{{ res_value('REPORT_ABSENT') }}</a></td>
+                    {% else %}
+                        <td><a class="report_empty">{{ res_value('REPORT_PREPARING') }}</a></td>
+                    {% endif %}
+                {% else %}
+                  <td><a class="get_report" href="/model-status/{{ el.id_model }}/{{ el.id_calc }}/report_0705">{{ res_value('REPORT_GET') }}</a></td>
+                {% endif %}
+
+                {% if el.st_0705 == 'R' and el.st_0703 == 'R' and el.st_0702 == 'R' and el.st_0701 == 'R' %}
+                  <td><a  class="get_report" href="/model-status/{{ el.id_model }}/{{ el.id_calc }}/report_resume">{{ res_value('REPORT_GET') }}</a></td>
+                {% else %}
+                   <td><a>{{ res_value('REPORT_ABSENT') }}</a></td>
+                {% endif %}
+
+                <td>
+                    <a class="command-del" href="/model-status/{{ el.id_model }}/{{ el.id_calc }}/del">{{ res_value('REMOVE') }}</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+    </table><br>
+<!--</div>-->
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ res_value('UPDATING_MODEL') }}
+{% endblock %}
+
+{% block main_title %}
+    <h1 class="title">{{ res_value('UPDATING_MODEL') }}</h1>
+{% endblock %}
+
+{% block body %}
+<form class="form_model_update" method="post">
+    <input class="input" type="text" name="title" value="{{ cursor.title }}" placeholder="Название статьи"><br>
+    <textarea class="textarea_short" name="intro" placeholder="Анонс">{{ cursor.intro }}</textarea><br>
+    <textarea class="textarea_full" name="text" placeholder="Основной текст">{{ cursor.text }}</textarea><br>
+    <div><input type="submit" class="bt success" value="{{ res_value('UPDATE') }}"></div>
+</form>
+{% endblock %}

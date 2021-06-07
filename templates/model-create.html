@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ res_value('NEW_MODEL') }}
+{% endblock %}
+
+{% block main_title %}
+    <h1 class="title">{{ res_value('ADDING_MODEL') }}</h1>
+{% endblock %}
+
+{% block body %}
+<form class="form_model_create" method="POST" >
+    <input type="text" name="title" placeholder="Название модели"><br>
+    <textarea class="textarea_short" name="intro" placeholder="Краткое описание"></textarea><br>
+    <textarea class="textarea_full" name="text" placeholder="Детальное описание модели"></textarea><br>
+    <input type="submit" class="bt success" value="{{ res_value('SAVE_MODEL') }}">
+</form>
+{% endblock %}

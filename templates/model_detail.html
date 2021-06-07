@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ cursor.title }}
+{% endblock %}
+
+{% block main_title %}
+    <h1  class="title">{{ cursor.title }}</h1>
+{% endblock %}
+
+{% block body %}
+<div class="form_model_detail">
+        <p class="title2">{{ res_value('NUMBER_MODEL') }} {{ cursor.id_model }}</p>
+        <p class="title2">{{ res_value('DAT_CREATE') }} {{ cursor.dat.date() }}</p>
+        <p class="title2">{{ res_value('SHORT_DESCR') }} {{ cursor.intro }}</p>
+        <p class="title2">{{ res_value('FULL_DESCR') }} {{ cursor.text }}</p>
+        <hr>
+        <a href="/model_detail/{{ cursor.id_model }}/upd" class ="bt success">{{ res_value('BUTTON_EDIT') }}</a>
+        <a href="/model_detail/{{ cursor.id_model }}/del" class ="bt danger">{{ res_value('BUTTON_DELETE') }}</a>
+</div>
+{% endblock %}

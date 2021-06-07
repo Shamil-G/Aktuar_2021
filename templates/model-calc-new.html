@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Новый расчет
+{% endblock %}
+
+{% block main_title %}
+    <h1  class="title">Новый расчет, модель {{ id_model }}</h1>
+{% endblock %}
+
+{% block body %}
+<div>
+    <form class="form_calc_new" method="POST">
+        <a class="title2">Месяц расчета: </a>
+        <label>
+            <input type="date" name="date_calc" placeholder="Месяц расчета" value="{{ date_calc }}" />
+        </label>
+        <br>
+    <hr>
+    <input type="submit" class="bt success" value="Сохранить">
+    <a href="/model_status/{{ id_model }}" class="bt success">Не сохранять</a>
+    </form>
+</div>
+{% endblock %}

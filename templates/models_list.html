@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ res_value('LIST_MODELS') }}
+{% endblock %}
+
+{% block main_title %}
+    <h1  class="title">{{ res_value('LIST_MODELS') }}</h1>
+{% endblock %}
+
+{% block body %}
+<div class="forms_model_list">
+    {% for el in cursor %}
+        <form class="form_model_list">
+            <p class="title2">{{ el.title }}</p>
+            <p class="title2">{{ el.intro }}</p>
+            <p class="title2">Дата: {{ el.dat.date() }}</p>
+            <hr>
+            <a href="/model_detail/{{ el.id_model }}" class="bt success">{{ res_value('MORE_DETAILS') }}</a>
+            <a href="/model_status/{{ el.id_model }}" class="bt success">{{ res_value('STATISTICS') }}</a>
+        </form>
+    {% endfor %}
+</div>
+{% endblock %}
