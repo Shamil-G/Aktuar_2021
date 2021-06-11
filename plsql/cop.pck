@@ -47,6 +47,50 @@ create or replace package body cop is
       end;
   end;
 
+  function is_admin(iid_user in number) return pls_integer
+  as
+    v_admin pls_integer default 0;
+  begin
+    select count(*) into v_admin
+    from users u, users_roles ur, roles r
+    where u.id_user=iid_user
+    and   ur.id_user=iid_user
+    and   r.id_role=ur.id_role
+    and   r.name='Admin';
+    return v_admin;    
+  end is_admin;
+  
+  procedure new_user2(uname in nvarchar2, upass in nvarchar2, imess out nvarchar2, iid_creator in number)
+  is
+    v_id_user    number(9);
+    v_name_creator number(9);
+  begin
+    imess:='';
+    select u.name into v_name_creator from users u where u.id_user=iid_creator;
+    select max(id_user) into v_id_user from users;
+    insert into users(id_user, name, password) values(v_id_user+1, uname, upass);
+    insert into protocol(event_date, message) 
+           values(sysdate, 'New User: '||uname||', created by: '||v_name_creator);
+    commit;
+    exception when dup_val_on_index then
+      begin
+        if is_admin(iid_creator)>0 or 
+           v_name_creator=uname
+          then
+            update users u
+            set u.password=upass
+            where u.name=uname;
+            commit;
+            insert into protocol(event_date, message) values(sysdate, 'Update password for user name: '||uname||' by: '||v_name_creator);
+            commit;
+        else
+          insert into protocol(event_date, message) values(sysdate, 'New User duplicate user name: '||uname);
+          imess:='Такое имя в системе уже существует';
+          commit;
+        end if;
+      end;
+  end;
+
   procedure login(uname in nvarchar2, upass out nvarchar2, uactive out nchar)
   is
   v_password nvarchar2(512);
@@ -70,7 +114,6 @@ create or replace package body cop is
   procedure login(uname in nvarchar2, upass out nvarchar2, iid_user out number)
   is
   v_password nvarchar2(512);
-  v_active   nchar(1);
   v_id       number(9);
   begin
     insert into protocol(event_date, message) values(CURRENT_TIMESTAMP, 'Login for: '||uname);
