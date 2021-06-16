@@ -4,3 +4,4 @@ REPORTS_PATH = './reports/spool/'
 debug_level = 2
 src_lang = 'file'
 language = 'ru'
+os = 'unix'
