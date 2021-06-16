@@ -1,4 +1,5 @@
-rem python -m venv venv
-rem python -m venv d:\python\flask\Aktuar2021\venv\scripts\activate
-venv\Scripts\activate.bat
-#python app.py
+#python -m venv venv
+#python -m venv $HOME/Aktuar2021/venv/Scripts/activate
+
+source $HOME/Aktuar2021/venv/bin/activate
+nohup python main_app.py > log.txt $
