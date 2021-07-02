@@ -1,6 +1,6 @@
 from main_app import app
 from flask_login import login_required
-from flask import request, redirect, render_template, url_for
+from flask import request, redirect, render_template, url_for, g
 from model.aktuar_models import *
 from model.utils import *
 from datetime import date
