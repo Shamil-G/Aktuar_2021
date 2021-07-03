@@ -21,13 +21,13 @@ def rep_childcare_0705(id_calc):
 		worksheet.set_column(2, 2, 10)
 		worksheet.set_column(3, 3, 19)
 
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("Начало расчета по уходу за ребенком : "+now.strftime("%d-%m-%Y %H:%M:%S"))
 
 		con = get_connection()
 		cursor = con.cursor()
 
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("\nНачинаем  формировать отчет для id_calc: "+str(id_calc))
 		cursor.execute(
 			"select rownum, al.pnpt_id, al.rfpm_id, al.summ_all from model_calculates al where al.id_calc=:id " +
@@ -59,7 +59,7 @@ def rep_childcare_0705(id_calc):
 
 		now = datetime.datetime.now()
 
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("Завершен расчет по уходу за ребенком: "+now.strftime("%d-%m-%Y %H:%M:%S"))
 
 		con.commit()

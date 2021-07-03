@@ -21,13 +21,13 @@ def rep_disability_0702(id_calc):
 		worksheet.set_column(2, 2, 10)
 		worksheet.set_column(3, 3, 19)
 
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("Начало расчета по Disability mortality: "+now.strftime("%d-%m-%Y %H:%M:%S"))
 
 		con = get_connection()
 		cursor = con.cursor()
 
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("\nНачинаем формировать расчет для ID_CALC: " + str(id_calc))
 
 		cursor.execute(
@@ -65,7 +65,7 @@ def rep_disability_0702(id_calc):
 
 		# cursor = con.cursor()
 
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("\nНачинаем формировать расчет для ID_CALC: " + str(id_calc))
 
 		cursor.execute(
@@ -96,7 +96,7 @@ def rep_disability_0702(id_calc):
 		workbook.close()
 
 		now = datetime.datetime.now()
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("Завершено Disability mortality: "+now.strftime("%d-%m-%Y %H:%M:%S"))
 
 		con.commit()

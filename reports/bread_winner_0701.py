@@ -34,7 +34,7 @@ def rep_bread_winner_0701(id_calc):
 		sum_pay_format = workbook.add_format({'num_format': '#,###,##0.00', 'font_color': 'black', 'align': 'vcenter'})
 
 		now = datetime.datetime.now()
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("Начало формирования отчета по потере кормильца с 1 иждивенцем: "+now.strftime("%d-%m-%Y %H:%M:%S"))
 		worksheet = workbook.add_worksheet('1 иждивенец')
 		format_worksheet(worksheet=worksheet, common_format=common_format)
@@ -55,7 +55,7 @@ def rep_bread_winner_0701(id_calc):
 		worksheet.write(row+1, 3, "=SUM(D2:D"+str(row+1)+")", sum_pay_format)
 
 		now = datetime.datetime.now()
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print("Начало формирования отчета по потере кормильца с 2 иждивенцами: " + now.strftime("%d-%m-%Y %H:%M:%S"))
 		worksheet = workbook.add_worksheet('2 иждивенца')
 		format_worksheet(worksheet=worksheet, common_format=common_format)
@@ -76,7 +76,7 @@ def rep_bread_winner_0701(id_calc):
 		worksheet.write(row + 1, 3, "=SUM(D2:D" + str(row + 1) + ")", sum_pay_format)
 
 		now = datetime.datetime.now()
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print(
 				"Начало формирования отчета по потере кормильца с 3 иждивенцами: " + now.strftime("%d-%m-%Y %H:%M:%S"))
 		worksheet = workbook.add_worksheet('3 иждивенца')
@@ -99,7 +99,7 @@ def rep_bread_winner_0701(id_calc):
 		worksheet.write(row + 1, 3, "=SUM(D2:D" + str(row + 1) + ")", sum_pay_format)
 
 		now = datetime.datetime.now()
-		if cfg.Debug:
+		if cfg.debug_level>2:
 			print(
 				"Начало формирования отчета по потере кормильца с 4 иждивенцами: " + now.strftime("%d-%m-%Y %H:%M:%S"))
 		worksheet = workbook.add_worksheet('4 и более')

@@ -21,13 +21,13 @@ def rep_resume(id_calc):
         worksheet.set_column(2, 2, 12)
         worksheet.set_column(3, 3, 19)
 
-        if cfg.Debug:
+        if cfg.debug_level>2:
             print("Начало сводного расчета: ")
 
         con = get_connection()
         cursor = con.cursor()
 
-        if cfg.Debug:
+        if cfg.debug_level>2:
             print("\nНачинаем формировать сводный отчет для id_calc: " + str(id_calc) +
                   ",  время: " + now.strftime("%d-%m-%Y %H:%M:%S"))
 
@@ -86,7 +86,7 @@ def rep_resume(id_calc):
 
         now = datetime.datetime.now()
 
-        if cfg.Debug:
+        if cfg.debug_level>2:
             print("Завершено формирование сводного отчета: " + now.strftime("%d-%m-%Y %H:%M:%S"))
 
         con.commit()
